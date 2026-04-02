@@ -1,0 +1,12 @@
+[
+  {
+    "templateCode": "invoice_gtgt_a_tax_a4",
+    "displayName": "GTGT A4.01",
+    "previewRelativePath": "/templates/defaults/previews/invoice_gtgt_a_tax_a4.jpg",
+    "xsltRelativePath": "/templates/defaults/invoice_gtgt_a_tax_a4.xslt",
+    "category": "invoice",
+    "invoiceType": "VAT",
+    "sizes": ["A4"],
+    "taxRates": ["10"]
+  }
+]

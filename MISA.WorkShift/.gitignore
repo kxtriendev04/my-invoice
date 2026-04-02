@@ -1,0 +1,56 @@
+
+# ----- Build output -----
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# ----- User-specific -----
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ----- Logs -----
+*.log
+
+# ----- OS generated -----
+.DS_Store
+Thumbs.db
+
+# ----- VSCode -----
+.vscode/
+
+# ----- NuGet -----
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# ----- Entity Framework Migrations Designer -----
+**/*Designer.cs
+
+# ----- Secrets -----
+appsettings.Development.json
+secrets.json
+*.env
+.env.*
+
+# ----- Test results -----
+TestResults/
+*.coverage
+*.coveragexml
+
+# ----- Crash Dumps -----
+*.dmp
+
+# ----- Publish artifacts -----
+artifacts/
+dist/
+release/
+build/
+
+# ----- Cache folders -----
+**/node_modules/
+**/.cache/

@@ -1,0 +1,6 @@
+<HDon><DLHDon><Id>5c7f0fb4-8582-41f5-a587-ad9fa69ffd97</Id><TenHDon>Hóa đơn GTGT</TenHDon></DLHDon>
+          <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+            <SignedInfo><SignatureMethod Algorithm="rsa-sha1"/><Reference><DigestValue>FAKE_DIGEST</DigestValue></Reference></SignedInfo>
+            <SignatureValue>FAKE_VALUE_54010C0B88889999</SignatureValue>
+            <KeyInfo><X509Data><X509Certificate>MOCK_CERT_OF_CÔNG TY CỔ PHẦN ĐẠI VIỆT</X509Certificate></X509Data></KeyInfo>
+          </Signature></HDon>

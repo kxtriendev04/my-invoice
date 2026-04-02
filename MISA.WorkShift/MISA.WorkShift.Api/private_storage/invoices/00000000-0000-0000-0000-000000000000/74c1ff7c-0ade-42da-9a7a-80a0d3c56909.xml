@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<HDon>
+  <DLHDon>
+    <TTChung>
+      <THDon>0</THDon>
+      <KHMSHDon>invoice_gtgt_a_tax_a4</KHMSHDon>
+      <KHHDon>1C23TAA</KHHDon>
+      <SHDon></SHDon>
+      <NLap>2026-04-02T06:35:16</NLap>
+      <DVTTe>VND</DVTTe>
+      <TGia>1</TGia>
+      <HTTToan>TM/CK</HTTToan>
+      <NBan>
+        <MST>0101243150-996</MST>
+        <Ten>Công ty cổ phần Đại Việt</Ten>
+        <DChi>Tầng 9 Technosoft, Phường Cầu Giấy, Thành phố Hà Nội, Việt Nam</DChi>
+      </NBan>
+      <NMua>
+        <HVTNMHang>Công ty TNHH Phần mềm A</HVTNMHang>
+        <Ten>Công ty TNHH Phần mềm ABC</Ten>
+        <MST>0102030405</MST>
+        <DChi>Số 1, đường A, Hà Nội</DChi>
+        <DCTDTu>contact@abc.vn</DCTDTu>
+        <SDThoai>0987654321</SDThoai>
+        <STKhoan></STKhoan>
+        <TNHang></TNHang>
+      </NMua>
+    </TTChung>
+    <DSHHDVu>
+      <HHDVu>
+        <STT>1</STT>
+        <TChat>1</TChat>
+        <THHDVu>iPhone 15 Pro Max 256GB</THHDVu>
+        <DVTinh>Chiếc</DVTinh>
+        <SLuong>2</SLuong>
+        <DGia>29900000</DGia>
+        <TLCKhau>0</TLCKhau>
+        <STCKhau>0</STCKhau>
+        <ThTien>59800000</ThTien>
+        <TSuat>10%</TSuat>
+        <TienThue>0</TienThue>
+        <TTien>59800000</TTien>
+      </HHDVu>
+    </DSHHDVu>
+    <TToan>
+      <THTToan>59800000</THTToan>
+      <TTCKKhac>0</TTCKKhac>
+      <TGTGT>5980000</TGTGT>
+      <TgTCien>65780000</TgTCien>
+      <TgTienBangChu></TgTienBangChu>
+    </TToan>
+  </DLHDon>
+  <DSCKS />
+  <MCCQT></MCCQT>
+</HDon>

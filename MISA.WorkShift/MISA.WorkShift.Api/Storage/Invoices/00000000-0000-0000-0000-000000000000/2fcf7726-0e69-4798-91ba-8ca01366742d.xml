@@ -1,0 +1,9 @@
+﻿<HDon><DLHDon><Id>2fcf7726-0e69-4798-91ba-8ca01366742d</Id><TenHDon>Hóa đơn GTGT</TenHDon></DLHDon>
+    <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+      <SignedInfo>
+        <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+        <Reference URI=""><DigestValue>MOCK_DIGEST_DATA</DigestValue></Reference>
+      </SignedInfo>
+      <SignatureValue>MOCK_SIGNED_VALUE_BY_MISA_TOOL</SignatureValue>
+      <KeyInfo><X509Data><X509Certificate>MOCK_CERT</X509Certificate></X509Data></KeyInfo>
+    </Signature></HDon>
