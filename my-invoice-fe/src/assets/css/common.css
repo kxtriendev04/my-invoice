@@ -1,0 +1,25 @@
+.d-flex {
+  display: flex;
+}
+.items-center {
+  align-items: center;
+}
+.center {
+  justify-content: center;
+  align-items: center;
+}
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+:root {
+  --color-primary: #245fdf;
+  --color-light-primary: #f0f6fe;
+}
+.one-line-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
