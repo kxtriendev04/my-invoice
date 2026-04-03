@@ -439,14 +439,12 @@
                 </div>
               </div>
 
-              <button
-                v-else
-                class="btn-sign mt-16"
-                @click="handleElectronicSign"
-                :disabled="isSigning || isViewMode"
-              >
+              <!-- <button v-else class="btn-sign mt-16" :disabled="isSigning || isViewMode">
                 <Edit2 :size="14" class="mr-8" />
                 <span>{{ isSigning ? 'Đang đọc Token...' : 'Ký điện tử' }}</span>
+              </button> -->
+              <button v-else class="btn-sign" style="margin-top: 12px" disabled="true">
+                Nhấn Lưu và gửi để ký điện tử
               </button>
             </div>
           </div>
@@ -474,7 +472,7 @@
           <span>{{ isInvoiceSigning ? 'Đang ký...' : 'Ký phát hành hóa đơn' }}</span>
         </button> -->
         <button class="btn-cancel">Hủy</button>
-        <button class="btn-cancel" @click="handleSaveDraft" :disabled="isViewMode">Lưu</button>
+        <!-- <button class="btn-cancel" @click="handleSaveDraft" :disabled="isViewMode">Lưu</button> -->
         <button class="btn-primary" @click="submitForm" :disabled="isViewMode">Lưu và gửi</button>
       </div>
     </div>

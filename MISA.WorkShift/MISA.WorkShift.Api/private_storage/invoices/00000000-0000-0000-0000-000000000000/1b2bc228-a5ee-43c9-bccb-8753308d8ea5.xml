@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<HDon>
+  <DLHDon Id="MISA_C88C446A">
+    <TTChung>
+      <PBan>2.0.1</PBan>
+      <THDon>0</THDon>
+      <SHDon>00000002</SHDon>
+      <NLap>2026-04-03T10:23:40</NLap>
+      <DVTTe>VND</DVTTe>
+      <TGia>1</TGia>
+      <HTTToan>TM/CK</HTTToan>
+    </TTChung>
+    <NBan>
+      <MST>0101243150-996</MST>
+      <Ten>Công ty cổ phần Đại Việt</Ten>
+    </NBan>
+    <NMua>
+      <Ten>Công ty TNHH Phần mềm ABC</Ten>
+      <MST>0102030405</MST>
+    </NMua>
+    <DSHHDVu>
+      <HHDVu>
+        <STT>1</STT>
+        <THHDVu>BỘ CHẮN BÙN TRƯỚC *R368*</THHDVu>
+        <SLuong>1</SLuong>
+        <DGia>150000</DGia>
+        <TSuat>10%</TSuat>
+        <TTien>150000</TTien>
+      </HHDVu>
+    </DSHHDVu>
+    <TToan>
+      <TgTCien>165000</TgTCien>
+      <TgTienBangChu />
+    </TToan>
+  </DLHDon>
+  <DSCKS>
+    <NBan />
+  </DSCKS>
+</HDon>

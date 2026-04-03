@@ -105,6 +105,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import taxPortalApi from '@/api/taxPortalApi'
+import { useToastStore } from '@/stores/useToastStore'
+
+const toast = useToastStore()
 
 const activeTab = ref('registration')
 const pendingList = ref([])
@@ -132,10 +135,10 @@ const approve = async (id) => {
   if (confirm('Bạn có chắc chắn muốn phê duyệt tờ khai này không?')) {
     try {
       await taxPortalApi.approveRegistration(id)
-      alert('Phê duyệt thành công! Thông báo đã được gửi về phần mềm.')
+      toast.success('Phê duyệt thành công! Thông báo đã được gửi về phần mềm.')
       fetchData()
     } catch (error) {
-      alert('Có lỗi xảy ra.')
+      toast.error('Có lỗi xảy ra.')
     }
   }
 }
@@ -144,10 +147,10 @@ const approveInv = async (id) => {
   if (confirm('Bạn có chắc chắn muốn cấp mã cho hóa đơn này?')) {
     try {
       await taxPortalApi.approveInvoice(id)
-      alert('Đã cấp mã CQT thành công!')
+      toast.success('Đã cấp mã CQT thành công!')
       fetchData()
     } catch (error) {
-      alert('Có lỗi xảy ra.')
+      toast.error('Có lỗi xảy ra.')
     }
   }
 }

@@ -1,19 +1,20 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MISA.WorkShift.Api.Services;
 using MISA.WorkShift.Core.DTOs;
 using MISA.WorkShift.Core.Entities;
-using MISA.WorkShift.Core.Interfaces.Services;
+using MISA.WorkShift.Core.Enums;
 using MISA.WorkShift.Core.Interfaces.Repositories;
+using MISA.WorkShift.Core.Interfaces.Services;
+using PuppeteerSharp;
+using PuppeteerSharp.Media;
 using System;
 using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.Xsl;
 using System.Text;
 using System.Threading.Tasks;
-using PuppeteerSharp;
-using MISA.WorkShift.Core.Enums;
-using MISA.WorkShift.Api.Services;
+using System.Xml;
+using System.Xml.Xsl;
 
 namespace MISA.WorkShift.Api.Controllers
 {
@@ -200,8 +201,28 @@ namespace MISA.WorkShift.Api.Controllers
                     var launchOptions = new LaunchOptions { Headless = true };
                     await using var browser = await Puppeteer.LaunchAsync(launchOptions);
                     await using var page = await browser.NewPageAsync();
-                    await page.SetContentAsync(html);
-                    var pdfBytes = await page.PdfDataAsync(new PdfOptions { Format = PuppeteerSharp.Media.PaperFormat.A4 });
+                    await page.SetContentAsync(html, new NavigationOptions
+                    {
+                        WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+                    });
+
+                    // ép dùng print CSS
+                    await page.EmulateMediaTypeAsync(MediaType.Print);
+
+                    var pdfBytes = await page.PdfDataAsync(new PdfOptions
+                    {
+                        Format = PaperFormat.A4,
+                        PrintBackground = true,
+                        PreferCSSPageSize = true,
+                        MarginOptions = new MarginOptions
+                        {
+                            Top = "10mm",
+                            Bottom = "10mm",
+                            Left = "10mm",
+                            Right = "10mm"
+                        }
+                    });
+                    //var pdfBytes = await page.PdfDataAsync(new PdfOptions { Format = PuppeteerSharp.Media.PaperFormat.A4 });
                     var fileName = (invoice.InvoiceNumber ?? invoice.InvoiceId.ToString()) + ".pdf";
                     // ask browser to open inline (PDF viewer) instead of forcing download
                     Response.Headers["Content-Disposition"] = $"inline; filename=\"{fileName}\"";

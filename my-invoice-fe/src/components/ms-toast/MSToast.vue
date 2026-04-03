@@ -26,7 +26,11 @@ const toast = useToastStore()
 .ms-toast {
   position: fixed;
   top: 20px;
-  right: 20px;
+  /* Căn giữa */
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* Giữ nguyên các thuộc tính cũ */
   min-width: 300px;
   height: 48px;
   background: #fff;
