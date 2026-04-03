@@ -7,8 +7,8 @@ import { formatDateString } from '@/utils/format'
 import { CircleCheck, CircleOff, Plus, Trash2, X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
-import MSToast from '@/components/ms-toast/MSToast.vue'
 import invoiceRegistrationApi from '@/api/invoiceRegistrationApi'
+import { useToastStore } from '@/stores/useToastStore'
 
 //#region Constants
 const router = useRouter()
@@ -31,7 +31,7 @@ const opMap = {
 
 //#region State
 // Popup State
-const toastRef = ref(null)
+const toast = useToastStore()
 const isLoading = ref(false)
 
 // Pagination State
@@ -264,11 +264,11 @@ const handleExport = async () => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      toastRef.value?.showSuccessToast('Xuất khẩu dữ liệu thành công!')
+      toast.success('Xuất khẩu dữ liệu thành công!')
     }
   } catch (error) {
     console.error('Lỗi xuất khẩu:', error)
-    toastRef.value?.showErrorToast('Có lỗi xảy ra khi xuất khẩu dữ liệu.')
+    toast.error('Có lỗi xảy ra khi xuất khẩu dữ liệu.')
   }
 }
 
@@ -408,13 +408,13 @@ const handleBatchUpdateStatus = async (status) => {
 
     await invoiceRegistrationApi.updateStatusMulti(payload)
 
-    toastRef.value.showSuccessToast('Cập nhật trạng thái thành công!')
+    toast.success('Cập nhật trạng thái thành công!')
 
     selectedRowIds.value = []
     await loadData()
   } catch (error) {
     console.error(error)
-    toastRef.value?.showErrorToast('Có lỗi xảy ra khi cập nhật trạng thái.')
+    toast.error('Có lỗi xảy ra khi cập nhật trạng thái.')
   }
 }
 
@@ -430,7 +430,7 @@ const handleDelete = async (item) => {
 
 const handleBatchDelete = () => {
   if (selectedRowIds.value.length === 0) {
-    toastRef.value?.showWarningToast('Vui lòng chọn ít nhất một bản ghi để xóa.')
+    toast.warning('Vui lòng chọn ít nhất một bản ghi để xóa.')
     return
   }
 
@@ -445,13 +445,13 @@ const handleConfirmDelete = async () => {
     if (isMultipleDelete.value) {
       await invoiceRegistrationApi.deleteMulti(selectedRowIds.value)
 
-      toastRef.value?.showSuccessToast(`Đã xóa thành công ${selectedRowIds.value.length} tờ khai!`)
+      toast.success(`Đã xóa thành công ${selectedRowIds.value.length} tờ khai!`)
       selectedRowIds.value = []
     } else {
       if (itemToDelete.value) {
         const id = itemToDelete.value.registrationId || itemToDelete.value.RegistrationId
         await invoiceRegistrationApi.delete(id)
-        toastRef.value?.showSuccessToast('Xóa dữ liệu thành công!')
+        toast.success('Xóa dữ liệu thành công!')
       }
     }
 
@@ -460,7 +460,7 @@ const handleConfirmDelete = async () => {
   } catch (error) {
     console.error('Lỗi xóa:', error)
     const msg = error.response?.data?.userMsg || 'Có lỗi xảy ra khi xóa dữ liệu.'
-    toastRef.value?.showErrorToast(msg)
+    toast.error(msg)
   }
 }
 

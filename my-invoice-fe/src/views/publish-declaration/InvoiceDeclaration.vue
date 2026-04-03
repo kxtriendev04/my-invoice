@@ -465,17 +465,17 @@
         <button class="btn-outline text-blue border-blue">
           <CheckCircle :size="14" class="mr-4" /> Hỗ trợ rà soát thông tin tờ khai
         </button>
-        <button
+        <!-- <button
           class="btn-primary ml-12"
           @click="handleSignAndPublishInvoice"
           :disabled="isInvoiceSigning"
         >
           <Edit2 :size="14" class="mr-8" />
           <span>{{ isInvoiceSigning ? 'Đang ký...' : 'Ký phát hành hóa đơn' }}</span>
-        </button>
+        </button> -->
         <button class="btn-cancel">Hủy</button>
         <button class="btn-cancel" @click="handleSaveDraft" :disabled="isViewMode">Lưu</button>
-        <button class="btn-primary" @click="submitForm">Lưu và gửi</button>
+        <button class="btn-primary" @click="submitForm" :disabled="isViewMode">Lưu và gửi</button>
       </div>
     </div>
 
@@ -515,9 +515,11 @@ import invoiceRegistrationApi from '@/api/invoiceRegistrationApi'
 import invoicesApi from '@/api/invoicesApi'
 import * as signalR from '@microsoft/signalr'
 import { mockCertificates } from '@/data/mockCertificates'
+import { useToastStore } from '@/stores/useToastStore'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToastStore()
 
 // State cho chế độ xem (readonly)
 const isViewMode = ref(false)
@@ -664,9 +666,9 @@ const handleElectronicSign = async () => {
         signDate: new Date().toLocaleDateString('vi-VN'),
       }
       tables.signatures = [signature]
-      alert('Ký điện tử thành công bằng chứng thư: ' + cert.subject)
+      toast.success('Ký điện tử thành công bằng chứng thư: ' + cert.subject)
     } else {
-      alert('Bạn chưa chọn chứng thư hoặc ID không hợp lệ.')
+      toast.warning('Bạn chưa chọn chứng thư hoặc ID không hợp lệ.')
     }
     isSigning.value = false
   }, 800)
@@ -676,15 +678,15 @@ const handleElectronicSign = async () => {
 const submitForm = async () => {
   // --- A. Validate cơ bản (Có thể dùng thư viện VeeValidate/Yup để xịn hơn) ---
   if (!formData.registrationNo) {
-    alert('Vui lòng nhập Số tờ khai!')
+    toast.warning('Vui lòng nhập Số tờ khai!')
     return
   }
   if (!formData.taxpayerName) {
-    alert('Vui lòng nhập Tên người nộp thuế!')
+    toast.warning('Vui lòng nhập Tên người nộp thuế!')
     return
   }
   if (!formData.taxCode || formData.taxCode.length < 10) {
-    alert('Mã số thuế không hợp lệ!')
+    toast.warning('Mã số thuế không hợp lệ!')
     return
   }
   // if (tables.signatures.length === 0) {
@@ -712,7 +714,7 @@ const submitForm = async () => {
       }
 
       await invoiceRegistrationApi.update(currentRegistrationId.value, updatePayload)
-      alert('Lưu và gửi tờ khai thành công')
+      toast.success('Lưu và gửi tờ khai thành công')
       router.push('/invoice/declaration/list')
       return
     }
@@ -735,10 +737,10 @@ const submitForm = async () => {
     }
 
     const res = await invoiceRegistrationApi.saveFull(payload)
-    alert(res?.userMsg || 'Lưu và gửi tờ khai thành công')
+    toast.success(res?.userMsg || 'Lưu và gửi tờ khai thành công')
     router.push('/invoice/declaration/list')
   } catch (error) {
-    alert('Lỗi: ' + (error.response?.data?.userMsg || error.message))
+    toast.error('Lỗi: ' + (error.response?.data?.userMsg || error.message))
   }
 }
 
@@ -772,7 +774,7 @@ const handleSaveDraft = async () => {
     if (!currentRegistrationId.value) {
       // Nếu là tạo mới thì gọi saveFull để lưu cả bộ
       const res = await invoiceRegistrationApi.saveFull(payload)
-      alert(res?.userMsg || 'Lưu tờ khai thành công')
+      toast.success(res?.userMsg || 'Lưu tờ khai thành công')
       // Nếu backend trả về ID, cập nhật local state (cố gắng tìm nhiều trường khả dĩ)
       const newId =
         res?.data?.registration?.registrationId ||
@@ -783,11 +785,11 @@ const handleSaveDraft = async () => {
     } else {
       // Nếu đã có ID thì gọi update (cập nhật đơn thuần)
       await invoiceRegistrationApi.update(currentRegistrationId.value, formData)
-      alert('Lưu tờ khai thành công')
+      toast.success('Lưu tờ khai thành công')
     }
   } catch (err) {
     console.error('Lỗi khi lưu tờ khai:', err)
-    alert('Lỗi khi lưu tờ khai. Xem console để biết chi tiết.')
+    toast.error('Lỗi khi lưu tờ khai. Xem console để biết chi tiết.')
   }
 }
 

@@ -23,9 +23,11 @@ import invoiceTemplateApi from '@/api/invoiceTemplateApi'
 import invoicesApi from '@/api/invoicesApi'
 import { mockCertificates } from '@/data/mockCertificates'
 import { useRouter } from 'vue-router'
+import { useToastStore } from '@/stores/useToastStore'
 
 const router = useRouter()
 const route = useRoute()
+const toast = useToastStore()
 
 // Trạng thái xử lý ký số
 const isPublishing = ref(false)
@@ -253,7 +255,7 @@ const loadInvoiceForEdit = async (id) => {
     }
   } catch (err) {
     console.error('Không thể load hóa đơn để sửa:', err)
-    alert('Không thể tải hóa đơn để sửa.')
+    toast.error('Không thể tải hóa đơn để sửa.')
   }
 }
 
@@ -359,15 +361,16 @@ const formatCurrency = (val) => new Intl.NumberFormat('vi-VN').format(val || 0)
 /**
  * Hàm xử lý Ký và Phát hành hóa đơn
  */
+/**
+ * Thực hiện quy trình phát hành hóa đơn
+ */
 const handlePublish = async () => {
   try {
-    // 1. Kiểm tra và Lưu dữ liệu hóa đơn trước khi phát hành
-    // Nếu chưa có ID hoặc đang sửa, ta thực hiện lưu để đảm bảo dữ liệu mới nhất được ký
     let invoiceId = currentInvoiceId.value
 
+    // Bước 1: Lưu hóa đơn nếu là tạo mới hoặc đang sửa để đồng bộ dữ liệu
+    let createRes = null
     if (!invoiceId) {
-      // Nếu chưa lưu nháp, thực hiện lưu trước
-      // ✅ đúng
       const values = {
         buyerTaxCode: buyerTaxCode.value,
         buyerName: buyerName.value,
@@ -379,64 +382,303 @@ const handlePublish = async () => {
         buyerBankAccount: buyerBankAccount.value,
         buyerBankName: buyerBankName.value,
       }
-      invoiceId = await processSubmit(values, true)
-      if (!invoiceId) return
+
+      // Giả sử processSubmit trả về ID sau khi lưu thành công
+      createRes = await processSubmit(values, true)
+      if (!createRes) return
     }
 
     isPublishing.value = true
 
-    // 2. Lấy nội dung XML chưa ký từ server (giả sử endpoint này tồn tại)
-    // const xmlRes = await invoiceApi.getUnsignedXml(invoiceId);
-    // const unsignedXml = xmlRes.data;
-    const unsignedXml = `<HDon><DLHDon><Id>${invoiceId}</Id><TenHDon>Hóa đơn GTGT</TenHDon></DLHDon></HDon>`
+    // Bước 2: Lấy XML chưa ký từ Backend (Dựa trên invoiceId)
+    // Lưu ý: Backend cần trả về đúng cấu trúc XML của MISA (HDon > DLHDon...)
+    console.log('Đang lấy dữ liệu XML từ server...')
+    const unsignedXml = await invoicesApi.getUnsignedXml(createRes.invoiceId)
+    // const unsignedXml = xmlRes.data // Đây là chuỗi XML raw
 
-    // 3. Gọi Tool ký số (Giả lập tương tác với MISA Tool qua Localhost hoặc WebSocket)
-    console.log('Đang gọi Tool ký số với XML:', unsignedXml)
-    const signedXml = await callMisaSignTool(unsignedXml)
-    debugger
-    // 4. Gửi XML đã có chữ ký lên Backend để lưu trữ và cấp số
-    const res = await invoicesApi.signAndPublish(invoiceId, {
-      signedXmlContent: signedXml,
+    // Bước 3: Gọi Tool ký số MISA
+    console.log('Đang thực hiện ký số...')
+    const misaResponse = await callMisaSignTool('SignXML', unsignedXml)
+
+    // Kiểm tra lỗi từ Tool (MISA trả về errorCode nếu có lỗi hoặc User bấm Hủy)
+    if (!misaResponse || misaResponse.errorCode) {
+      const errorMsg = misaResponse?.msgError || 'Người dùng đã hủy thao tác ký.'
+      throw new Error(errorMsg)
+    }
+
+    // Bước 4: Trích xuất XML đã ký
+    // Theo kết quả thực tế bạn nhận được, XML nằm trong files[0].text
+    const signedXmlContent = misaResponse.xml
+
+    console.log('Ký số thành công. Đang gửi dữ liệu phát hành...')
+
+    // Bước 5: Gửi XML đã ký lên Backend để cấp số hóa đơn và gửi Thuế
+    const publishRes = await invoicesApi.signAndPublish(createRes.invoiceId, {
+      signedXmlContent: signedXmlContent,
+      transactionID: misaResponse.transactionID, // Gửi kèm ID giao dịch của MISA để đối soát
     })
-
-    if (res) {
-      alert('Hóa đơn đã được ký và gửi cho cơ quan thuế thành công!')
+    if (publishRes) {
+      // Chuyển hướng về danh sách hóa đơn
+      toast.success('Hoá đơn đã được ký và gửi tới Cơ quan thuế')
       router.push('/invoice/list')
     }
   } catch (err) {
-    console.error('Lỗi phát hành:', err)
-    alert('Phát hành thất bại: ' + (err.response?.data?.userMsg || err.message))
+    console.error('Lỗi quy trình phát hành:', err)
+    // Hiển thị lỗi thân thiện cho người dùng
+    const message = err.response?.data?.userMsg || err.message
+    toast.error('Phát hành thất bại: ' + message)
   } finally {
     isPublishing.value = false
   }
 }
-
 /**
  * Giả lập gọi Tool MISA ký số
  * Trong thực tế, bạn sẽ dùng fetch() gọi đến service của MISA chạy ở localhost
  */
-const callMisaSignTool = async (xml) => {
+// const callMisaSignToolFake = async (xml) => {
+//   return new Promise((resolve, reject) => {
+//     setTimeout(() => {
+//       const certListStr = mockCertificates.map((c) => `${c.id}: ${c.subject}`).join('\n')
+//       const selectedId = window.prompt(`CHỌN CHỨNG THƯ SỐ ĐỂ KÝ HÓA ĐƠN:\n${certListStr}`, '1')
+
+//       const cert = mockCertificates.find((c) => c.id === selectedId)
+
+//       if (cert) {
+//         const fakeSignature = `
+//           <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+//             <SignedInfo><SignatureMethod Algorithm="rsa-sha1"/><Reference><DigestValue>FAKE_DIGEST</DigestValue></Reference></SignedInfo>
+//             <SignatureValue>FAKE_VALUE_${cert.serial}</SignatureValue>
+//             <KeyInfo><X509Data><X509Certificate>MOCK_CERT_OF_${cert.subject}</X509Certificate></X509Data></KeyInfo>
+//           </Signature>`
+
+//         const completedXml = xml.replace('</HDon>', fakeSignature + '</HDon>')
+//         resolve(completedXml)
+//       } else {
+//         reject(new Error('Người dùng đã hủy hoặc không chọn chứng thư số.'))
+//       }
+//     }, 1000)
+//   })
+// }
+
+/**
+ * Gọi Tool ký số MISA qua WebSocket
+ * @param {string} action - Hành động (ví dụ: 'SignXML')
+ * @param {string} xmlData - Nội dung XML chưa ký
+ */
+/**
+ * Gọi Tool ký số MISA với Payload chuẩn 2026
+ * @param {string} action - 'SignXML'
+ * @param {string} xmlData - Nội dung XML raw
+ * @param {string} taxCode - Mã số thuế đơn vị bán (trong XML)
+ */
+/**
+ * Hàm gọi Tool ký số MISA với đầy đủ Payload chuẩn 2026
+ * @param {string} action - Hành động, mặc định là 'SignXML'
+ * @param {string} xmlData - Nội dung XML thô lấy từ Backend
+ * @param {Object} info - Chứa taxCode, address, và invoiceGuid của hóa đơn
+ */
+/**
+ * Hàm gọi Tool ký số MISA "Bất bại" - Đã fix lỗi Malformed & Node Chữ ký
+ */
+// const callMisaSignTool = (action, xmlData = null, info = {}) => {
+//   return new Promise((resolve, reject) => {
+//     const port = 11984
+//     const socket = new WebSocket(`ws://localhost:${port}/plugin`)
+
+//     const fakeId = 'MISA_' + Math.random().toString(36).substring(2, 11).toUpperCase()
+//     const timestamp = Date.now()
+
+//     // 1. LÀM SẠCH XML & LOẠI BỎ KHOẢNG TRẮNG
+//     let finalXml = xmlData.replace(/>\s+</g, '><').trim()
+
+//     // 2. ÉP ID VÀO DLHDon (Dùng Regex chính xác hơn)
+//     if (finalXml.includes('<DLHDon')) {
+//       // Thay thế hoặc thêm Id vào thẻ DLHDon
+//       finalXml = finalXml.replace(/<DLHDon[^>]*>/, `<DLHDon Id="${fakeId}">`)
+//     }
+
+//     // 3. XỬ LÝ THẺ CHỮ KÝ (Xóa cũ, thêm mới đúng chuẩn MISA)
+//     finalXml = finalXml.replace(/<DSCKS.*?>.*?<\/DSCKS>/g, '')
+//     finalXml = finalXml.replace(/<DSCKS\s*\/?>/g, '')
+
+//     // Chèn cụm DSCKS vào trước thẻ đóng cuối cùng của XML (thường là </HDon>)
+//     const lastTagIndex = finalXml.lastIndexOf('</')
+//     if (lastTagIndex !== -1) {
+//       finalXml =
+//         finalXml.substring(0, lastTagIndex) +
+//         '<DSCKS><NBan/></DSCKS>' +
+//         finalXml.substring(lastTagIndex)
+//     }
+
+//     // 4. HÀM ENCODE BASE64 CHUẨN (Fix lỗi trích xuất do sai định dạng font)
+//     const encodeBase64 = (str) => {
+//       // Sử dụng cách này để an toàn tuyệt đối với tiếng Việt (UTF-8)
+//       const bytes = new TextEncoder().encode(str)
+//       let binary = ''
+//       for (let i = 0; i < bytes.byteLength; i++) {
+//         binary += String.fromCharCode(bytes[i])
+//       }
+//       return btoa(binary)
+//     }
+
+//     const requestData = {
+//       action: action || 'SignXML',
+//       sessionId: 'SESSION_' + timestamp,
+//       productName: 'MISA meInvoice',
+//       taxcode: info.taxCode || '0101243150-996',
+//       sellerInfo: {
+//         sellerTaxCode: info.taxCode || '0101243150-996',
+//         sellerAddressLine: info.address || 'Quốc lộ 80, An Giang, Việt Nam.',
+//         sellerPhoneNumber: '',
+//       },
+//       files: [
+//         {
+//           name: 'InvoiceXML.xml',
+//           data: encodeBase64(finalXml),
+//           invoiceElectronicID: info.invoiceGuid || 'b9f7e534-dc91-5e7f-189a-294343449e20',
+//           transactionID: fakeId,
+//         },
+//       ],
+//       jsObject: 'oPublicInvoice',
+//       invoiceDatas: 1,
+//       jsCallBackFn: 'callbackElectronicSignXML',
+//       isSendEmail: false,
+//       isSelectFromCollection: true,
+//       isSignTT68: false,
+//       isSignTT32: false,
+//       expiredPrompt: false,
+//     }
+
+//     console.log('> Payload gửi đi:', JSON.stringify(requestData))
+
+//     socket.onopen = () => {
+//       socket.send(JSON.stringify(requestData))
+//     }
+
+//     socket.onmessage = (event) => {
+//       try {
+//         const response = JSON.parse(event.data)
+
+//         // Kiểm tra xem Tool báo thành công không (status: true)
+//         if (response.status) {
+//           const internalData = JSON.parse(response.data)
+//           if (internalData.files && internalData.files.length > 0) {
+//             const signedXmlContent = internalData.files[0].text
+//             const signedBase64 = internalData.files[0].data
+//             console.log('%c[MISA] Đã trích xuất XML thành công!', 'color: #4CAF50')
+//             // Trả về object sạch sẽ để bạn dùng ở hàm gọi
+//             resolve({
+//               xml: signedXmlContent,
+//               base64: signedBase64,
+//               certName: internalData.CertName,
+//               serial: internalData.serialNumbers,
+//             })
+//           } else {
+//             reject(new Error("Không tìm thấy mảng 'files' trong dữ liệu nội bộ của Tool."))
+//           }
+//         } else {
+//           reject(new Error(response.message || 'Tool MISA trả về status false.'))
+//         }
+//       } catch (e) {
+//         console.error('Lỗi phân giải JSON:', e)
+//         reject(new Error("Dữ liệu từ Tool không đúng định dạng hoặc bị lỗi 'phá kén'."))
+//       } finally {
+//         socket.close()
+//       }
+//     }
+
+//     socket.onerror = () => reject(new Error('Không kết nối được Tool'))
+
+//     setTimeout(() => {
+//       if (socket.readyState !== WebSocket.CLOSED) {
+//         socket.close()
+//         reject(new Error('Timeout'))
+//       }
+//     }, 100000)
+//   })
+// }
+
+const callMisaSignTool = (action, xmlData = null, info = {}) => {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const certListStr = mockCertificates.map((c) => `${c.id}: ${c.subject}`).join('\n')
-      const selectedId = window.prompt(`CHỌN CHỨNG THƯ SỐ ĐỂ KÝ HÓA ĐƠN:\n${certListStr}`, '1')
+    const port = 11984
+    const socket = new WebSocket(`ws://localhost:${port}/plugin`)
 
-      const cert = mockCertificates.find((c) => c.id === selectedId)
+    // 1. Trích xuất ID từ XML mà Backend đã tạo (Để khớp với transactionID)
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlData, 'text/xml')
+    const dlHDonTag = xmlDoc.getElementsByTagName('DLHDon')[0]
+    const transactionId = dlHDonTag ? dlHDonTag.getAttribute('Id') : 'MISA_' + Date.now()
 
-      if (cert) {
-        const fakeSignature = `
-          <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
-            <SignedInfo><SignatureMethod Algorithm="rsa-sha1"/><Reference><DigestValue>FAKE_DIGEST</DigestValue></Reference></SignedInfo>
-            <SignatureValue>FAKE_VALUE_${cert.serial}</SignatureValue>
-            <KeyInfo><X509Data><X509Certificate>MOCK_CERT_OF_${cert.subject}</X509Certificate></X509Data></KeyInfo>
-          </Signature>`
-
-        const completedXml = xml.replace('</HDon>', fakeSignature + '</HDon>')
-        resolve(completedXml)
-      } else {
-        reject(new Error('Người dùng đã hủy hoặc không chọn chứng thư số.'))
+    // 2. Hàm Encode Base64 (Giữ lại để đảm bảo an toàn UTF-8)
+    const encodeBase64 = (str) => {
+      const bytes = new TextEncoder().encode(str)
+      let binary = ''
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i])
       }
-    }, 1000)
+      return btoa(binary)
+    }
+
+    const requestData = {
+      action: action || 'SignXML',
+      sessionId: 'SESSION_' + Date.now(),
+      productName: 'MISA meInvoice',
+      taxcode: info.taxCode,
+      sellerInfo: {
+        sellerTaxCode: info.taxCode,
+        sellerAddressLine: info.address || '',
+        sellerPhoneNumber: '',
+      },
+      files: [
+        {
+          name: 'InvoiceXML.xml',
+          data: encodeBase64(xmlData), // Truyền thẳng XML từ BE, không Regex
+          invoiceElectronicID: info.invoiceGuid,
+          transactionID: transactionId, // Dùng ID lấy từ trong XML ra
+        },
+      ],
+      jsObject: 'oPublicInvoice',
+      invoiceDatas: 1,
+      jsCallBackFn: 'callbackElectronicSignXML',
+      isSendEmail: false,
+      isSelectFromCollection: true,
+      isSignTT68: false,
+      isSignTT32: false,
+      expiredPrompt: false,
+    }
+
+    socket.onopen = () => socket.send(JSON.stringify(requestData))
+
+    socket.onmessage = (event) => {
+      try {
+        const response = JSON.parse(event.data)
+        if (response.status) {
+          const internalData = JSON.parse(response.data)
+          resolve({
+            xml: internalData.files[0].text,
+            base64: internalData.files[0].data,
+            certName: internalData.CertName,
+            serial: internalData.serialNumbers,
+          })
+        } else {
+          reject(new Error(response.message || 'Lỗi từ Tool MISA'))
+        }
+      } catch (e) {
+        reject(new Error('Lỗi xử lý phản hồi từ Tool.'))
+      } finally {
+        socket.close()
+      }
+    }
+
+    socket.onerror = () => reject(new Error('Không kết nối được Tool MISA (Hãy bật MISA KYSO)'))
+
+    // Timeout 1 phút (vì người dùng cần thời gian chọn Token/nhập PIN)
+    setTimeout(() => {
+      if (socket.readyState !== WebSocket.CLOSED) {
+        socket.close()
+        reject(new Error('Hết thời gian chờ ký số'))
+      }
+    }, 60000)
   })
 }
 
@@ -479,7 +721,7 @@ const processSubmit = async (values, isPublish) => {
 
   try {
     if (!selectedSeries.value) {
-      alert('Vui lòng chọn Ký hiệu (Series)')
+      toast.warning('Vui lòng chọn Ký hiệu (Series)')
       return
     }
     let res
@@ -487,18 +729,18 @@ const processSubmit = async (values, isPublish) => {
       // Update existing invoice
       res = await invoiceApi.update(currentInvoiceId.value, invoicePayload)
       console.log('Update invoice response:', res)
-      alert('Cập nhật hóa đơn thành công')
+      toast.success('Cập nhật hóa đơn thành công')
     } else {
       res = await invoiceApi.create(invoicePayload)
       console.log('Create invoice response:', res)
-      alert('Lập hóa đơn thành công')
+      toast.success('Lập hóa đơn thành công')
       if (res.data) currentInvoiceId.value = res.data
     }
     if (!isPublish) router.push('/invoice/list')
     return res.data
   } catch (err) {
     console.error('Lỗi khi gửi yêu cầu tạo hóa đơn', err)
-    alert('Có lỗi khi tạo hóa đơn. Xem console để biết chi tiết.')
+    toast.error('Có lỗi khi tạo hóa đơn. Xem console để biết chi tiết.')
   }
 }
 //#endregion
@@ -606,7 +848,7 @@ const hasKemBangKe = ref(false)
           </div>
         </div>
 
-        <form id="invoiceForm" @submit="onSaveAndIssue" class="buyer-form">
+        <form id="invoiceForm" @submit.prevent class="buyer-form">
           <div class="f-row">
             <div class="f-label">MST/CCCD chủ hộ:</div>
             <div class="f-control group-control">

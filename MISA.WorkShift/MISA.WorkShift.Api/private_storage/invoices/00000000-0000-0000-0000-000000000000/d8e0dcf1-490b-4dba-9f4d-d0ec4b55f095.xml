@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<HDon>
+  <DLHDon>
+    <TTChung>
+      <THDon>0</THDon>
+      <KHMSHDon>invoice_gtgt_a_tax_a4</KHMSHDon>
+      <KHHDon>1C23TAA</KHHDon>
+      <SHDon>00000028</SHDon>
+      <NLap>2026-04-03T06:24:13</NLap>
+      <DVTTe>VND</DVTTe>
+      <TGia>1</TGia>
+      <HTTToan>TM/CK</HTTToan>
+      <NBan>
+        <MST>0101243150-996</MST>
+        <Ten>Công ty cổ phần Đại Việt</Ten>
+        <DChi>Tầng 9 Technosoft, Phường Cầu Giấy, Thành phố Hà Nội, Việt Nam</DChi>
+      </NBan>
+      <NMua>
+        <HVTNMHang>Nguyễn Văn Nam</HVTNMHang>
+        <Ten>Nguyễn Văn Nam</Ten>
+        <MST>0312345678</MST>
+        <DChi>Quận 1, TP.HCM</DChi>
+        <DCTDTu>namnv@gmail.com</DCTDTu>
+        <SDThoai>0911222333</SDThoai>
+        <STKhoan></STKhoan>
+        <TNHang></TNHang>
+      </NMua>
+    </TTChung>
+    <DSHHDVu>
+      <HHDVu>
+        <STT>1</STT>
+        <TChat>1</TChat>
+        <THHDVu>Vàng 519</THHDVu>
+        <DVTinh>Chỉ</DVTinh>
+        <SLuong>1</SLuong>
+        <DGia>5190000</DGia>
+        <TLCKhau>0</TLCKhau>
+        <STCKhau>0</STCKhau>
+        <ThTien>5190000</ThTien>
+        <TSuat>10%</TSuat>
+        <TienThue>0</TienThue>
+        <TTien>5190000</TTien>
+      </HHDVu>
+    </DSHHDVu>
+    <TToan>
+      <THTToan>5190000</THTToan>
+      <TTCKKhac>0</TTCKKhac>
+      <TGTGT>519000</TGTGT>
+      <TgTCien>5709000</TgTCien>
+      <TgTienBangChu></TgTienBangChu>
+    </TToan>
+  </DLHDon>
+  <DSCKS />
+  <MCCQT></MCCQT>
+</HDon>

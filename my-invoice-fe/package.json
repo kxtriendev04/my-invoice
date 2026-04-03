@@ -17,6 +17,8 @@
     "@primevue/themes": "^4.5.4",
     "axios": "^1.13.2",
     "lucide-vue-next": "^0.555.0",
+    "pinata": "^2.5.5",
+    "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
     "vee-validate": "^4.15.1",

@@ -926,6 +926,9 @@ input[type='checkbox'] {
   position: relative;
   justify-content: center;
 }
+.custom-table thead tr {
+  background-color: #f3f4f6;
+}
 
 /* Group action (bọc 2 icon lại nếu có) */
 .custom-table tbody tr td.sticky-right .td-content {

@@ -11,7 +11,7 @@ import invoiceApi from '@/api/invoiceApi'
 import axiosClient from '@/api/axiosClient'
 import { useRouter } from 'vue-router'
 import ShiftUpsertPopUp from './ShiftUpsertPopup.vue'
-import MSToast from '@/components/ms-toast/MSToast.vue'
+import { useToastStore } from '@/stores/useToastStore'
 import shiftApi from '@/api/shiftApi'
 import { processShiftPayload } from '@/utils/shiftHelper'
 import * as signalR from '@microsoft/signalr'
@@ -41,7 +41,7 @@ const opMap = {
 // Popup State
 const isOpenPopup = ref(false)
 const popupData = ref({})
-const toastRef = ref(null)
+const toast = useToastStore()
 const isLoading = ref(false)
 const popupCount = ref(0)
 let connection = null
@@ -276,11 +276,11 @@ const handleExport = async () => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      toastRef.value?.showSuccessToast('Xuất khẩu dữ liệu thành công!')
+      toast.success('Xuất khẩu dữ liệu thành công!')
     }
   } catch (error) {
     console.error('Lỗi xuất khẩu:', error)
-    toastRef.value?.showErrorToast('Có lỗi xảy ra khi xuất khẩu dữ liệu.')
+    toast.error('Có lỗi xảy ra khi xuất khẩu dữ liệu.')
   } finally {
     // isLoading.value = false
   }
@@ -417,7 +417,7 @@ const startSignalR = async () => {
       invoice.issueStatus = data.Status
       invoice.CqtStatus = 3 // Chấp nhận
 
-      toastRef.value?.showSuccessToast(data.Message)
+      toast.success(data.Message)
     }
   })
 
@@ -477,7 +477,7 @@ const handleViewInvoice = async (item) => {
         parsed = { message: text }
       }
       console.error('Server returned error when requesting PDF:', parsed)
-      toastRef.value?.showErrorToast(parsed?.message || 'Lỗi khi tải PDF')
+      toast.error(parsed?.message || 'Lỗi khi tải PDF')
       return
     }
 
@@ -496,7 +496,7 @@ const handleViewInvoice = async (item) => {
     setTimeout(() => window.URL.revokeObjectURL(url), 1000 * 60)
   } catch (e) {
     console.error('Lỗi khi xem hóa đơn:', e)
-    toastRef.value?.showErrorToast('Không thể xem hóa đơn. Kiểm tra log.')
+    toast.error('Không thể xem hóa đơn. Kiểm tra log.')
   }
 }
 
@@ -528,7 +528,7 @@ const handleSubmitShift = async (data, mode) => {
 
     if (res && (res.code === 200 || res.code === 201)) {
       // Thông báo thành công
-      toastRef.value.showSuccessToast(data.InvoiceId ? 'Sửa thành công!' : 'Thêm mới thành công!')
+      toast.success(data.InvoiceId ? 'Sửa thành công!' : 'Thêm mới thành công!')
 
       await loadData()
 
@@ -572,7 +572,7 @@ const handleToggleStatus = async (item) => {
   try {
     const newStatus = item.status === 1 ? 0 : 1
     await shiftApi.updateStatusMulti({ ids: [item.InvoiceId], status: newStatus })
-    toastRef.value.showSuccessToast('Cập nhật trạng thái thành công')
+    toast.success('Cập nhật trạng thái thành công')
     loadData()
   } catch (e) {
     console.error(e)
@@ -655,7 +655,7 @@ const handleBatchUpdateStatus = async (status) => {
 
     await shiftApi.updateStatusMulti(payload)
 
-    toastRef.value.showSuccessToast('Cập nhật trạng thái thành công!')
+    toast.success('Cập nhật trạng thái thành công!')
 
     selectedRowIds.value = []
     await loadData()
@@ -684,7 +684,7 @@ const handleDelete = async (item) => {
  */
 const handleBatchDeleteShift = () => {
   if (selectedRowIds.value.length === 0) {
-    toastRef.value?.showWarningToast('Vui lòng chọn ít nhất một bản ghi để xóa.')
+    toast.warning('Vui lòng chọn ít nhất một bản ghi để xóa.')
     return
   }
 
@@ -703,12 +703,12 @@ const handleConfirmDelete = async () => {
     if (isMultipleDelete.value) {
       await invoiceApi.deleteMulti(selectedRowIds.value)
 
-      toastRef.value?.showSuccessToast(`Đã xóa thành công ${selectedRowIds.value.length} hóa đơn!`)
+      toast.success(`Đã xóa thành công ${selectedRowIds.value.length} hóa đơn!`)
       selectedRowIds.value = []
     } else {
       if (itemToDelete.value) {
         await invoiceApi.delete(itemToDelete.value.InvoiceId)
-        toastRef.value?.showSuccessToast('Xóa dữ liệu thành công!')
+        toast.success('Xóa dữ liệu thành công!')
       }
     }
 
@@ -717,7 +717,7 @@ const handleConfirmDelete = async () => {
   } catch (error) {
     console.error('Lỗi xóa:', error)
     const msg = error.response?.data?.userMsg || 'Có lỗi xảy ra khi xóa dữ liệu.'
-    toastRef.value?.showErrorToast(msg)
+    toast.error(msg)
   } finally {
   }
 }
@@ -841,7 +841,6 @@ onUnmounted(() => {
       @close="handleClosePopup"
       @submit="handleSubmitShift"
     ></ShiftUpsertPopUp>
-    <MSToast ref="toastRef" />
     <MSAlert :is-show="isShowAlert" :title="validateMessage ? 'Cảnh báo!' : 'Xóa Hóa đơn'">
       <template #message>
         <p v-if="validateMessage">{{ validateMessage }}</p>

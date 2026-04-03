@@ -10,7 +10,7 @@ namespace MISA.WorkShift.Core.Interfaces.Repositories
     {
         // Thêm các phương thức đặc thù cho Invoice tại đây nếu cần (VD: Lấy số hóa đơn mới nhất)
         string GetNextInvoiceNumber();
-        int InsertInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details);
+        Invoice InsertInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details);
         List<InvoiceDetail> GetDetailsByInvoiceId(Guid invoiceId);
         int UpdateInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details);
         /// <summary>

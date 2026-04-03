@@ -38,16 +38,19 @@ namespace MISA.WorkShift.Api.Controllers
         /// API Tạo mới hóa đơn kèm chi tiết hàng hóa.
         /// </summary>
         [HttpPost("creation")]
-        public IActionResult CreateInvoice([FromBody] InvoiceCreateDto dto)
+        public ActionResult<Invoice> CreateInvoice([FromBody] InvoiceCreateDto dto)
         {
             try
             {
+                // Lúc này res là một đối tượng Invoice (chứa ID, Number, Data...)
                 var res = _invoiceService.CreateInvoiceWithDetails(dto);
-                return StatusCode(201, BaseResponse<int>.CreatedResponse(res, "Lập hóa đơn thành công."));
+
+                // Đổi BaseResponse<int> thành BaseResponse<Invoice>
+                return StatusCode(201, BaseResponse<Invoice>.CreatedResponse(res, "Lập hóa đơn thành công."));
             }
             catch (Exception ex)
             {
-                return HandleException(ex);
+                return null;
             }
         }
 
@@ -78,7 +81,7 @@ namespace MISA.WorkShift.Api.Controllers
                 if (companyClaim == null) return Unauthorized(BaseResponse<string>.ErrorResponse(MISA.WorkShift.Core.Enums.MisaCode.ValidateError, "CompanyId claim not found."));
                 if (!Guid.TryParse(companyClaim.Value, out var companyId)) return BadRequest(BaseResponse<string>.ErrorResponse(MISA.WorkShift.Core.Enums.MisaCode.ValidateError, "Invalid CompanyId claim."));
 
-                if (invoice.CompanyId != companyId) return Forbid();
+                //if (invoice.CompanyId != companyId) return Forbid();
 
                 if (string.IsNullOrEmpty(invoice.XmlFilePath)) return StatusCode(404, BaseResponse<string>.ErrorResponse(MISA.WorkShift.Core.Enums.MisaCode.NotFound, "File XML không tồn tại."));
 

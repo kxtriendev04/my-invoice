@@ -98,9 +98,11 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, CircleHelp, PlayCircle } from 'lucide-vue-next'
 import invoiceTemplateApi from '@/api/invoiceTemplateApi'
+import { useToastStore } from '@/stores/useToastStore'
 
 const router = useRouter()
 const route = useRoute()
+const toast = useToastStore()
 
 // --- Refs ---
 const iframeRef = ref(null)
@@ -281,7 +283,7 @@ const handleImageUpload = (event, type) => {
 // 4. Submit dữ liệu
 const saveConfig = async () => {
   if (!formData.templateName || !formData.invSeries) {
-    alert('Vui lòng nhập đầy đủ Tên mẫu và Ký hiệu.')
+    toast.warning('Vui lòng nhập đầy đủ Tên mẫu và Ký hiệu.')
     return
   }
 
@@ -299,17 +301,17 @@ const saveConfig = async () => {
     if (formData.templateId) {
       // Cập nhật mẫu đã có
       await invoiceTemplateApi.update(formData.templateId, payload)
-      alert('Cập nhật mẫu hóa đơn thành công!')
+      toast.success('Cập nhật mẫu hóa đơn thành công!')
     } else {
       // Tạo mới mẫu
       await invoiceTemplateApi.create(payload)
-      alert('Lưu mẫu hóa đơn thành công!')
+      toast.success('Lưu mẫu hóa đơn thành công!')
     }
 
     router.push('/invoice/template/list')
   } catch (error) {
     console.error('Lỗi khi lưu mẫu hóa đơn:', error)
-    alert('Có lỗi xảy ra khi lưu. Vui lòng kiểm tra lại thông tin.')
+    toast.error('Có lỗi xảy ra khi lưu. Vui lòng kiểm tra lại thông tin.')
   }
 }
 </script>

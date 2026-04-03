@@ -52,7 +52,7 @@ namespace MISA.WorkShift.Core.Services
         /// <summary>
         /// Nghiệp vụ thêm mới hóa đơn kèm chi tiết hàng hóa.
         /// </summary>
-        public int CreateInvoiceWithDetails(InvoiceCreateDto dto)
+        public Invoice CreateInvoiceWithDetails(InvoiceCreateDto dto)
         {
             // 1. Validate nghiệp vụ cho Header
             ValidateBusiness(dto.Invoice, true);

@@ -3,6 +3,11 @@ import axiosClient from './axiosClient'
 const invoicesApi = {
   // ... other invoice related APIs
 
+  createInvoice: (data) => axiosClient.post('/creation', data),
+
+  getUnsignedXml(id) {
+    return axiosClient.get(`/invoices/${id}/xml`)
+  },
   /**
    * Ký và phát hành hóa đơn điện tử.
    * @param {string} invoiceId ID của hóa đơn

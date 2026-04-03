@@ -2,11 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { companyApi, userApi, companyUserApi } from '@/api/adminApi'
 import MSButton from '@/components/ms-button/MSButton.vue'
-import MSToast from '@/components/ms-toast/MSToast.vue'
 import { Plus, Trash2, UserPlus, X } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
+import { useToastStore } from '@/stores/useToastStore'
 
-const toastRef = ref(null)
+const toast = useToastStore()
 const route = useRoute()
 
 // Danh sách công ty và người dùng
@@ -70,7 +70,7 @@ const loadCompanyUsers = async (companyId) => {
     }
   } catch (error) {
     console.error('Lỗi tải danh sách người dùng trong công ty:', error)
-    toastRef.value?.showErrorToast('Không thể tải dữ liệu')
+    toast.error('Không thể tải dữ liệu')
   } finally {
     isLoading.value = false
   }
@@ -85,11 +85,11 @@ const handleCompanyChange = (companyId) => {
 // Xử lý gán người dùng
 const handleAssignUser = async () => {
   if (!selectedCompany.value) {
-    toastRef.value?.showWarningToast('Vui lòng chọn công ty')
+    toast.warning('Vui lòng chọn công ty')
     return
   }
   if (!selectedUser.value) {
-    toastRef.value?.showWarningToast('Vui lòng chọn người dùng')
+    toast.warning('Vui lòng chọn người dùng')
     return
   }
 
@@ -101,13 +101,13 @@ const handleAssignUser = async () => {
       roleId: parseInt(selectedRole.value),
     }
     await companyUserApi.assignUserToCompany(data)
-    toastRef.value?.showSuccessToast('Gán người dùng thành công')
+    toast.success('Gán người dùng thành công')
     selectedUser.value = ''
     selectedRole.value = 2
     loadCompanyUsers(selectedCompany.value)
   } catch (error) {
     console.error('Lỗi gán người dùng:', error)
-    toastRef.value?.showErrorToast('Không thể gán người dùng')
+    toast.error('Không thể gán người dùng')
   } finally {
     isSaving.value = false
   }
@@ -122,11 +122,11 @@ const handleRemoveUser = async (userId) => {
       companyId: selectedCompany.value,
       userId,
     })
-    toastRef.value?.showSuccessToast('Xóa thành công')
+    toast.success('Xóa thành công')
     loadCompanyUsers(selectedCompany.value)
   } catch (error) {
     console.error('Lỗi xóa:', error)
-    toastRef.value?.showErrorToast('Không thể xóa')
+    toast.error('Không thể xóa')
   }
 }
 
@@ -255,8 +255,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
-    <MSToast ref="toastRef" />
   </div>
 </template>
 

@@ -46,23 +46,58 @@ namespace MISA.WorkShift.Infrastructure.Repositories
         /// <summary>
         /// Lưu hóa đơn và chi tiết trong một giao dịch.
         /// </summary>
-        public int InsertInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details)
+        //public int InsertInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details)
+        //{
+        //    using var transaction = _context.Database.BeginTransaction();
+        //    try
+        //    {
+        //        // Lưu Header
+        //        _context.Invoices.Add(invoice);
+
+        //        // Lưu Details
+        //        if (details != null && details.Any())
+        //        {
+        //            _context.InvoiceDetails.AddRange(details);
+        //        }
+
+        //        var res = _context.SaveChanges();
+        //        transaction.Commit();
+        //        return res;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        transaction.Rollback();
+        //        throw;
+        //    }
+        //}
+
+        public Invoice InsertInvoiceMasterDetail(Invoice invoice, List<InvoiceDetail> details)
         {
             using var transaction = _context.Database.BeginTransaction();
             try
             {
-                // Lưu Header
+                // 1. Thêm Header
                 _context.Invoices.Add(invoice);
-                
-                // Lưu Details
+
+                // 2. Thêm Details (Gán InvoiceId nếu chưa có)
                 if (details != null && details.Any())
                 {
+                    foreach (var d in details)
+                    {
+                        // Nếu InvoiceId là Guid và sinh ở Client/Server thì gán ở đây
+                        d.InvoiceId = invoice.InvoiceId;
+                        if (d.DetailId == Guid.Empty) d.DetailId = Guid.NewGuid();
+                    }
                     _context.InvoiceDetails.AddRange(details);
                 }
 
-                var res = _context.SaveChanges();
+                // 3. Lưu vào DB
+                _context.SaveChanges();
+
                 transaction.Commit();
-                return res;
+
+                // Sau khi SaveChanges, object 'invoice' đã được cập nhật đầy đủ dữ liệu từ DB (như ID, các cột default)
+                return invoice;
             }
             catch (Exception)
             {
@@ -70,7 +105,6 @@ namespace MISA.WorkShift.Infrastructure.Repositories
                 throw;
             }
         }
-
         public List<InvoiceDetail> GetDetailsByInvoiceId(Guid invoiceId)
         {
             return _context.InvoiceDetails.Where(d => d.InvoiceId == invoiceId).AsNoTracking().ToList();
